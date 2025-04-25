@@ -34,7 +34,9 @@ def preprocess(text):
     words = [word for word in words if word not in stop_words]
     return " ".join(words)
 
-df['clean_text'] = df['Review'].astype(str).apply(preprocess)
+# df['clean_text'] = df['Review'].astype(str).apply(preprocess) default first coloumn name automatically takes
+text_col = df.select_dtypes(include='object').columns[0]
+df['clean_text'] = df[text_col].astype(str).apply(preprocess)
 
 # WordCloud
 all_words = " ".join(df['clean_text'])
