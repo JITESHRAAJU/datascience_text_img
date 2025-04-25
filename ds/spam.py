@@ -8,7 +8,8 @@ import seaborn as sns
 from textblob import TextBlob
 
 # Load dataset
-df = pd.read_csv("/mnt/data/c202d947-4cef-47b8-b1c4-678a6eb3d3d0.csv", encoding='latin1')
+df = pd.read_csv("/mnt/data/c202d947-4cef-47b8-b1c4-678a6eb3d3d0.csv", encoding='ISO-8859-1')
+
 df = df[['v1', 'v2']]
 df.columns = ['label', 'text']
 
