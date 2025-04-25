@@ -1,0 +1,24 @@
+Text Processing Inference:
+Model Used: TextBlob for sentiment analysis and TfidfVectorizer for feature extraction.
+
+Why:
+
+TextBlob: It is simple and effective for sentiment analysis as it can quickly classify the sentiment of a given text as positive, neutral, or negative based on predefined rules.
+
+TfidfVectorizer: This model converts text data into numerical form by assigning weights to words based on their frequency, allowing the model to evaluate the importance of words in distinguishing between different categories or topics.
+
+Inference Task: We use the trained model to classify the sentiment of unseen text or to find important terms that characterize the text data (e.g., for document classification or word cloud generation).
+
+Image Processing Inference:
+Model Used: Convolutional Neural Network (CNN) for image classification.
+
+Why:
+
+CNN: Convolutional Neural Networks are powerful for image recognition because they can automatically learn and detect important features like edges, textures, and shapes from raw pixel data. This makes CNNs ideal for tasks like object detection, classification, and segmentation.
+
+Inference Task: After training the CNN, we use it to predict the class of new images (e.g., distinguishing between cats and dogs). The model leverages learned features to classify images into predefined categories.
+
+Summary:
+In text processing, we use models like TextBlob and TfidfVectorizer for their simplicity and effectiveness in analyzing sentiment and extracting meaningful features from text data.
+
+In image processing, CNN is used because of its ability to automatically detect patterns in pixel data, making it ideal for tasks like image classification.
