@@ -1,5 +1,7 @@
 # Generalized Model Building Code (Classification/Regression + 1 or 2 datasets)
 
+# Generalized Model Building Code (Classification/Regression + 1 or 2 datasets)
+
 import pandas as pd
 import numpy as np
 
@@ -9,53 +11,58 @@ try:
     test_df = pd.read_csv("test.csv")
     separate = True
     print("Train and Test files loaded separately.")
+    target_col = 'Loan_Status'  # <-- Set it manually here if separate files given
 except:
     df = pd.read_csv("dataset.csv")          # If only one file given
     separate = False
     print("Single dataset loaded.")
+    target_col = input("\nEnter the target/output column name: ")   # <-- Ask user
 
 # Combine if train and test separately
 if separate:
-    test_df['Target'] = np.nan   # Placeholder for test
+    test_df[target_col] = np.nan   # <-- Use dynamic target_col here
     combined = pd.concat([train_df, test_df], ignore_index=True)
 else:
     combined = df.copy()
 
 # Basic Analysis
 print("\nDataset Head:\n", combined.head())
-print("\nDataset Description:\n", combined.describe())
-print("\nMissing Values:\n", combined.isnull().sum())
 
 # Fill Missing Values
 num_cols = combined.select_dtypes(include=[np.number]).columns
 cat_cols = combined.select_dtypes(include=['object']).columns
 
+# Remove target column from num_cols and cat_cols
+num_cols = [col for col in num_cols if col != target_col]
+cat_cols = [col for col in cat_cols if col != target_col]
+
+# Fill missing
 combined[num_cols] = combined[num_cols].fillna(combined[num_cols].mean())
 for col in cat_cols:
     combined[col] = combined[col].fillna(combined[col].mode()[0])
 
-print("\nMissing Values After Filling:\n", combined.isnull().sum())
-
-# Preprocessing - Encoding Categorical
+# Encode Categorical
 from sklearn.preprocessing import LabelEncoder, MinMaxScaler
 le = LabelEncoder()
 for col in cat_cols:
     combined[col] = le.fit_transform(combined[col].astype(str))
 
-# Scaling
+# Scale
 scaler = MinMaxScaler()
 combined[num_cols] = scaler.fit_transform(combined[num_cols])
 
-# Split back if needed
+# Split
 if separate:
-    train_processed = combined[combined['Target'].notna()]
-    test_processed = combined[combined['Target'].isna()].drop(columns=['Target'])
-    X = train_processed.drop(columns=['Target'])
-    y = train_processed['Target']
+    train_processed = combined[combined[target_col].notna()]
+    test_processed = combined[combined[target_col].isna()].drop(columns=[target_col])
+    X = train_processed.drop(columns=[target_col])
+    y = train_processed[target_col]
 else:
-    target_col = input("\nEnter the target/output column name: ")
     X = combined.drop(columns=[target_col])
     y = combined[target_col]
+
+
+
 
 # Train-Test Split
 from sklearn.model_selection import train_test_split
