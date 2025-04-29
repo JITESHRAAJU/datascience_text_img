@@ -1,6 +1,6 @@
 # Generalized Model Building Code (Classification/Regression + 1 or 2 datasets)
 
-# Generalized Model Building Code (Classification/Regression + 1 or 2 datasets)
+# single file no need to mannually change target_col if test tarin fiven manuaaly change target_col
 
 import pandas as pd
 import numpy as np
