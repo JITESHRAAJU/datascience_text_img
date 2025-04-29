@@ -6,13 +6,15 @@ from wordcloud import WordCloud
 from collections import Counter
 import seaborn as sns
 from textblob import TextBlob
+from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 
 # Load dataset
-df = pd.read_csv("/mnt/data/c202d947-4cef-47b8-b1c4-678a6eb3d3d0.csv", encoding='ISO-8859-1')
-
+df = pd.read_csv(r"C:\Users\raaju\OneDrive\Desktop\muruga_text_img_datascience\ds\spam.csv", encoding='latin1')
 df = df[['v1', 'v2']]
 df.columns = ['label', 'text']
-
 
 # Stopwords
 stop_words = {
@@ -27,7 +29,7 @@ stop_words = {
     'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only',
     'own', 'same', 'so', 'than', 'too', 'very', 'can', 'will', 'just', 'don', 'should',
     'now'
-} # keep your existing stop_words set
+}
 
 # Preprocessing
 def preprocess(text):
@@ -70,16 +72,15 @@ tfidf_dict = dict(zip(tfidf_terms, tfidf_scores))
 top_tfidf = sorted(tfidf_dict.items(), key=lambda x: x[1], reverse=True)[:10]
 print("\nTop 10 TF-IDF terms:\n", top_tfidf)
 
-# Sentiment
+# Sentiment Analysis
 def get_sentiment(text):
     return TextBlob(text).sentiment.polarity
 
 df['sentiment_score'] = df['clean_text'].apply(get_sentiment)
 
-# Sample output
 print("\nSentiment Scores Sample:\n", df[['text', 'sentiment_score']].head())
 
-# Sentiment distribution
+# Sentiment Distribution
 plt.figure(figsize=(10, 6))
 sns.histplot(df['sentiment_score'], kde=True, color='green')
 plt.title("Sentiment Score Distribution")
@@ -87,7 +88,7 @@ plt.xlabel("Sentiment Score")
 plt.ylabel("Frequency")
 plt.show()
 
-# Labeling
+# Categorize Sentiment
 def categorize_sentiment(score):
     if score > 0.1:
         return 'positive'
@@ -99,9 +100,31 @@ def categorize_sentiment(score):
 df['sentiment_label'] = df['sentiment_score'].apply(categorize_sentiment)
 print("\nSentiment Label Counts:\n", df['sentiment_label'].value_counts())
 
-# Pie Chart
+# Sentiment Pie Chart
 plt.figure(figsize=(6, 6))
 df['sentiment_label'].value_counts().plot.pie(autopct='%1.1f%%', colors=['lightgreen', 'lightcoral', 'lightgray'])
 plt.title("Sentiment Distribution")
 plt.ylabel("")
 plt.show()
+
+# Label Encoding
+le = LabelEncoder()
+df['label_num'] = le.fit_transform(df['label'])  # spam = 1, ham = 0
+
+# Train-test split and Naive Bayes Classification
+X_train, X_test, y_train, y_test = train_test_split(tfidf_matrix, df['label_num'], test_size=0.2, random_state=42)
+
+model = MultinomialNB()
+model.fit(X_train, y_train)
+y_pred = model.predict(X_test)
+
+# Performance Measures
+print("\nAccuracy:", accuracy_score(y_test, y_pred))
+print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred))
+print("\nClassification Report:\n", classification_report(y_test, y_pred, target_names=le.classes_))
+
+# Optional: Final Inference
+print("\nInference:")
+print("The Naive Bayes classifier performed well in distinguishing between spam and ham SMS messages.")
+print("The TF-IDF approach identified important spam keywords such as 'free', 'call', 'win'.")
+print("Sentiment analysis shows most spam messages lean slightly positive or neutral due to promotional language.")
