@@ -12,8 +12,8 @@ from sklearn.metrics import (accuracy_score, confusion_matrix, classification_re
 
 # Load dataset
 try:
-    train = pd.read_csv("train.csv")
-    test = pd.read_csv("test.csv")
+    train = pd.read_csv(r"C:\Users\raaju\OneDrive\Desktop\muruga_text_img_datascience\ds\loandataset\train_u6lujuX_CVtuZ9i.csv")
+    test = pd.read_csv(r"C:\Users\raaju\OneDrive\Desktop\muruga_text_img_datascience\ds\loandataset\test_Y3wMUE5_7gLdaTN.csv")
     test['Loan_Status'] = np.nan
     df = pd.concat([train, test], ignore_index=True)
     target = 'Loan_Status'
@@ -27,38 +27,49 @@ except:
 
 # Show basic stats
 print("\n--- Basic Statistics ---")
-print(df.describe(include='all').T[['mean', '50%', 'std']])  # median = 50%
+print(df.describe(include='all').T[['mean', '50%', 'std']])
 
-# Handle missing values
+# Identify numeric and categorical columns
 num_cols = df.select_dtypes(include='number').columns.drop(target, errors='ignore')
 cat_cols = df.select_dtypes(include='object').columns.drop(target, errors='ignore')
+
+# Fill missing values
 df[num_cols] = df[num_cols].fillna(df[num_cols].mean())
 for col in cat_cols:
-    df[col] = df[col].fillna(df[col].mode()[0])
+    df[col] = df[col].fillna(df[col].mode().iloc[0])
 
-# Encode & Scale
+# Encode categorical columns
 le = LabelEncoder()
 for col in cat_cols:
-    df[col] = le.fit_transform(df[col])
-scaler = MinMaxScaler()
-df[num_cols] = scaler.fit_transform(df[num_cols])
+    df[col] = le.fit_transform(df[col].astype(str))
 
 # Split into features & target
 if separate:
-    train_df = df[df[target].notna()]
     test_df = df[df[target].isna()].drop(columns=[target])
-    X = train_df.drop(columns=[target])
-    y = train_df[target]
+    if test_df.empty:
+        print("Warning: No rows found in test set after filtering.")
+        separate = False
+        X = df.drop(columns=[target])
+        y = df[target]
+    else:
+        train_df = df[df[target].notna()]
+        X = train_df.drop(columns=[target])
+        y = train_df[target]
 else:
     X = df.drop(columns=[target])
     y = df[target]
 
-# Split for validation
+# Scale features
+scaler = MinMaxScaler()
+X[num_cols] = scaler.fit_transform(X[num_cols])
+
+
+# Train-test split for evaluation
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Choose model
+# Model selection
 if y.dtype == 'object' or y.nunique() <= 10:
-    model = RandomForestClassifier()
+    model = RandomForestClassifier(random_state=42)
     task = 'classification'
 else:
     model = LinearRegression()
@@ -68,7 +79,7 @@ else:
 model.fit(X_train, y_train)
 y_pred = model.predict(X_test)
 
-# Evaluate
+# Evaluation
 if task == 'classification':
     print("\n--- Classification Report ---")
     print("Accuracy:", accuracy_score(y_test, y_pred))
@@ -80,6 +91,7 @@ if task == 'classification':
     plt.title("Confusion Matrix")
     plt.xlabel("Predicted")
     plt.ylabel("Actual")
+    plt.tight_layout()
     plt.show()
 
 else:
@@ -88,7 +100,10 @@ else:
     print("MAE:", mean_absolute_error(y_test, y_pred))
     print("MSE:", mean_squared_error(y_test, y_pred))
 
-# Predict test set if given
-if separate:
+# Predict on test data (if available)
+if separate and not test_df.empty:
     predictions = model.predict(test_df)
-    print("\nTest Predictions:\n", predictions)
+    print("\n--- Test Predictions ---")
+    print(predictions)
+else:
+    print("\nNo test data available for prediction.")
